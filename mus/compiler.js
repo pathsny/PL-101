@@ -1,24 +1,40 @@
 var compile = function(musexpr) {
-    var notexpr = {
-        notes: [],
-        timeSoFar: 0
-    };
-    do_compile(musexpr, notexpr, 0);
-    return notexpr.notes;
+    var notes = [];
+    do_compile(musexpr, notes, 0);
+    return notes;
 };
 
-var do_compile = function(musexpr, notexpr, startTime) {
-    if (musexpr.tag === 'note' || musexpr.tag === 'rest') do_compile_note(musexpr, notexpr, startTime);
-    else if (musexpr.tag === 'par') do_compile_par(musexpr, notexpr, startTime);
-    else if (musexpr.tag === 'seq') do_compile_seq(musexpr, notexpr, startTime);
-    else if (musexpr.tag === 'repeat') do_compile_repeat(musexpr, notexpr, startTime);
+var do_compile = function(musexpr, notes, startTime) {
+    if (musexpr.tag === 'note' || musexpr.tag === 'rest') return do_compile_note(musexpr, notes, startTime);
+    else if (musexpr.tag === 'par') return do_compile_par(musexpr, notes, startTime);
+    else if (musexpr.tag === 'seq') return do_compile_seq(musexpr, notes, startTime);
+    else if (musexpr.tag === 'repeat') return do_compile_repeat(musexpr, notes, startTime);
 };
 
-var do_compile_note = function(musexpr, notexpr, startTime) {
+var do_compile_note = function(musexpr, notes, startTime) {
     musexpr.start = startTime;
     if (musexpr.tag === 'note') musexpr.pitch = convertPitch(musexpr.pitch);
-    notexpr.notes.push(musexpr);
-    notexpr.timeSoFar = Math.max(notexpr.timeSoFar, startTime + musexpr.dur);
+    notes.push(musexpr);
+    return startTime + musexpr.dur
+};
+
+var do_compile_par = function(musexpr, notes, startTime) {
+    var e1 = do_compile(musexpr.left, notes, startTime);
+    var e2 = do_compile(musexpr.right, notes, startTime);
+    return Math.max(e1, e2);
+};
+
+var do_compile_seq = function(musexpr, notes, startTime) {
+    var endTime = do_compile(musexpr.left, notes, startTime);
+    return do_compile(musexpr.right, notes, endTime);
+};
+
+var do_compile_repeat = function(musexpr, notexpr, startTime) {
+    var timeSoFar = startTime;
+    for (var i=0; i<=musexpr.count; i++) {
+        var timeSoFar = do_compile(musexpr.section, notexpr, timeSoFar);
+    }
+    return timeSoFar;
 };
 
 var letterPitch = function(letter) {
@@ -28,24 +44,6 @@ var letterPitch = function(letter) {
 var convertPitch = function(chord) {
     var octave = Number(chord[1]);
     return 12 + 12*octave + letterPitch(chord[0]);
-};
-
-var do_compile_par = function(musexpr, notexpr, startTime) {
-    do_compile(musexpr.left, notexpr, startTime);
-    do_compile(musexpr.right, notexpr, startTime);
-};
-
-var do_compile_seq = function(musexpr, notexpr, startTime) {
-    do_compile(musexpr.left, notexpr, startTime);
-    do_compile(musexpr.right, notexpr, notexpr.timeSoFar);
-};
-
-var do_compile_repeat = function(musexpr, notexpr, startTime) {
-    var timeSoFar = startTime;
-    for (var i=0; i<=musexpr.count; i++) {
-        do_compile(musexpr.section, notexpr, timeSoFar);
-        timeSoFar = notexpr.timeSoFar;
-    }
 };
 
 var melody_mus = 
