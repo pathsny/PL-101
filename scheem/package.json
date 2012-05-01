@@ -1,0 +1,6 @@
+{ "name": "scheem_parser"
+,"version": "0.0.1"
+,"description": "A Parser for Scheem, a made up language for PL101 from NathansUniversity.com"
+,"author": "Vishnu Iyengar"
+,"dependencies": {"pegjs": ">=0.7.0", "should": "0.6.3"}
+}

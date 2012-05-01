@@ -1,0 +1,38 @@
+start =
+    filler * expression:expression filler * comment ?
+      {return expression;}
+
+expression = 
+    atom:atom
+      {return atom; }
+    / "(" filler* first:expression rest:filler_expression* filler*")"
+      {return [first].concat(rest); }
+	  / "'" inner:expression
+	      {return ["quote", inner];}
+
+
+validchar
+    = [0-9a-zA-Z_?!+\-=@#$%^&*/.]
+
+filler = 
+	comment_newline / spacechar+
+
+atom =
+    chars:validchar+
+        { return chars.join(""); }
+
+filler_expression = 
+	filler+ expression:expression
+           {return expression;}
+
+space_expression =
+  spacechar+ expression:expression
+           {return expression;}
+
+spacechar = [\t \n]
+
+comment = ";;"foo:[^\n]*
+       {return;}
+
+comment_newline = comment"\n"	
+       {return; }
